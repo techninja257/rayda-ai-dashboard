@@ -5,7 +5,7 @@ import numpy as np
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Victor Anderson | Rayda Assessment", layout="wide")
 
-# --- CUSTOM CSS ---
+# --- CUSTOM CSS (BLACK CARDS, WHITE TEXT) ---
 st.markdown("""
     <style>
     [data-testid="stMetric"] {
@@ -13,10 +13,10 @@ st.markdown("""
         padding: 20px !important;
         border-radius: 12px !important;
         border: 1px solid #333333 !important;
-        color: white !important;
     }
     [data-testid="stMetricLabel"] > div { color: #FFFFFF !important; font-weight: bold !important; }
     [data-testid="stMetricValue"] > div { color: #FFFFFF !important; }
+    [data-testid="stMetricDelta"] > div { color: #FF4B4B !important; }
     .main .block-container { padding-top: 2rem; }
     </style>
     """, unsafe_allow_html=True)
@@ -54,8 +54,8 @@ if page == "🖥️ Client Trust Portal (Task 1)":
     with col_a:
         st.subheader("🔍 Detailed Audit Trail: #RAY-9901")
         timeline = [
-            {"icon": "✅", "status": "Submitted", "time": "Oct 24, 09:00 AM", "note": "Client (Victor Anderson): 'Need these for the Nov 1st batch.'"},
-            {"icon": "✅", "status": "Acknowledged", "time": "Oct 24, 09:15 AM", "note": "System: Assigned to Hardware team. SLA: 5 Days."},
+            {"icon": "✅", "status": "Submitted", "time": "Oct 24, 09:00 AM", "note": "Client: 'Need these for the Nov 1st batch.'"},
+            {"icon": "✅", "status": "Acknowledged", "time": "Oct 24, 09:15 AM", "note": "System: Assigned to Hardware team."},
             {"icon": "🔵", "status": "In Progress", "time": "Oct 24, 11:30 AM", "note": "Ops (Sarah): '15 units sourced. Awaiting 5 more.'"},
             {"icon": "⚪", "status": "Resolved", "time": "Pending", "note": "-"},
         ]
@@ -76,29 +76,52 @@ if page == "🖥️ Client Trust Portal (Task 1)":
 # ==========================================
 elif page == "📈 AI Strategy & Metrics (Task 2)":
     st.title("📈 Task 2: AI Measurement Framework")
+    
+    # 1. Sidebar Control
+    st.sidebar.subheader("Adjust AI Sensitivity")
     threshold = st.sidebar.slider("AI Confidence Threshold (%)", 50, 99, 85)
     
-    total_reqs = 1000
+    # 2. Simulation Brain
     np.random.seed(42)
-    scores = np.random.normal(78, 12, total_reqs)
-    automated_count = sum(scores > threshold)
-    auto_rate = (automated_count / total_reqs)
-    reopen_rate = max(1.5, (100 - threshold) * 0.38)
+    scores = np.random.normal(78, 12, 1000)
+    
+    current_auto_count = sum(scores > threshold)
+    current_auto_rate = current_auto_count / 1000
+    current_reopen_rate = max(1.5, (100 - threshold) * 0.38)
 
+    # 3. Metrics (Black cards, White text)
     m1, m2, m3 = st.columns(3)
-    m1.metric("North Star: Automation Rate", f"{auto_rate:.1%}")
-    m2.metric("Guardrail: Re-open Rate", f"{reopen_rate:.1f}%", delta=f"{int(automated_count*(reopen_rate/100))} tickets", delta_color="inverse")
-    m3.success("Status: HEALTHY") if reopen_rate < 5 else m3.warning("Status: CAUTION") if reopen_rate < 10 else m3.error("Status: CRITICAL")
+    m1.metric("Automation Rate", f"{current_auto_rate:.1%}")
+    m2.metric("Re-open Rate (Risk)", f"{current_reopen_rate:.1f}%", delta=f"{int(current_auto_count*(current_reopen_rate/100))} tickets", delta_color="inverse")
+    
+    if current_reopen_rate > 10:
+        m3.error("Status: CRITICAL")
+    elif current_reopen_rate > 5:
+        m3.warning("Status: AT RISK")
+    else:
+        m3.success("Status: HEALTHY")
 
     st.divider()
-    st.subheader("The Trade-off: Scale vs. Trust")
-    t_range = list(range(50, 100))
-    chart_data = pd.DataFrame({
-        "Threshold": t_range,
-        "Automation %": [(len(scores[scores > t]) / total_reqs) * 100 for t in t_range],
-        "Re-open Risk %": [(max(1.5, (100 - t) * 0.38)) for t in t_range]
-    }).set_index("Threshold")
-    st.line_chart(chart_data)
+    st.subheader("Scale vs. Trust Frontier")
+    
+    # 4. Corrected Chart Logic
+    t_range = np.arange(50, 100, 1)
+    auto_points = [(sum(scores > t) / 1000) * 100 for t in t_range]
+    risk_points = [max(1.5, (100 - t) * 0.38) for t in t_range]
+    
+    chart_df = pd.DataFrame({
+        "Confidence_Threshold": t_range,
+        "Automation_Rate": auto_points,
+        "Reopen_Risk": risk_points
+    }).set_index("Confidence_Threshold")
+    
+    st.line_chart(chart_df)
+    
+    st.markdown(f"""
+    **Strategic Takeaway:** 
+    At a **{threshold}% threshold**, we find the balance between hitting our North Star and protecting client trust. 
+    Notice how as you lower the threshold to increase volume, the risk line rises sharply.
+    """)
 
 # ==========================================
 # PAGE 3: SPRINT RECOVERY (TASK 3)
@@ -110,33 +133,25 @@ else:
     col_c1, col_c2 = st.columns(2)
     with col_c1:
         st.subheader("📊 Post-Mortem Analysis")
-        st.write("Root Cause: **Scope Creep** and **Vague Definition of Ready (DoR)**.")
-        chart_miss = pd.DataFrame({"Status": ["Shipped", "Missed (Scope Creep)"], "Value": [60, 40]})
-        st.bar_chart(chart_miss.set_index("Status"))
+        chart_miss = pd.DataFrame({
+            "Category": ["Shipped", "Missed (Scope Creep)", "Missed (Vague AC)"],
+            "Points": [60, 25, 15]
+        }).set_index("Category")
+        st.bar_chart(chart_miss)
 
     with col_c2:
         st.subheader("🛡️ The 'Scope-Swap' Calculator")
-        st.info("Mid-sprint requests must follow a zero-sum rule.")
-        new_task_weight = st.number_input("Weight of new request (Points):", 1, 13, 5)
-        st.warning(f"To add this, you MUST remove at least {new_task_weight} points from the current sprint.")
-        swap_item = st.text_input("Item to be removed from Sprint:", "e.g., Update Profile UI")
+        st.info("Mid-sprint requests require a zero-sum trade-off.")
+        weight = st.number_input("New Task Points:", 1, 13, 5)
+        st.warning(f"Required: Remove {weight} points from current sprint.")
+        swap = st.text_input("Swap with:", "e.g., UI Refactor")
         if st.button("Authorize Scope Swap"):
-            st.success(f"Swap Logged: Added {new_task_weight}pts, Removed '{swap_item}'")
+            st.success(f"Swap Logged: Added {weight}pts, Removed '{swap}'")
 
     st.divider()
     st.subheader("📝 New Structural Artifacts")
-    tab_dor, tab_dod = st.tabs(["Definition of Ready (DoR)", "Definition of Done (DoD)"])
-    
-    with tab_dor:
-        st.markdown("""
-        - [ ] **Technical Handshake:** Dev confirms AC is understood.
-        - [ ] **Scope Boundary:** Ticket explicitly states what is NOT being done.
-        - [ ] **Design Lock:** Figma mocks include all edge cases (error/loading).
-        """)
-        
-    with tab_dod:
-        st.markdown("""
-        - [ ] **Scope Integrity:** No 'while-you-are-at-it' scope added.
-        - [ ] **Verification:** Verified in Staging against original AC.
-        - [ ] **Analytics:** Event tracking verified (Amplitude/PostHog).
-        """)
+    tab1, tab2 = st.tabs(["Definition of Ready (DoR)", "Definition of Done (DoD)"])
+    with tab1:
+        st.markdown("- [ ] **Technical Handshake:** Assigned dev confirms AC is clear.\n- [ ] **Scope Boundary:** Explicitly states what is NOT being built.\n- [ ] **Design Lock:** All edge cases mocked.")
+    with tab2:
+        st.markdown("- [ ] **Scope Integrity:** No unauthorized scope added.\n- [ ] **Verification:** Passed in Staging.\n- [ ] **Analytics:** Event tracking verified.")

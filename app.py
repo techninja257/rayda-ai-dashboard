@@ -1,79 +1,132 @@
 import streamlit as st
 import pandas as pd
-import datetime
+import numpy as np
 
-# --- CONFIG ---
-st.set_page_config(page_title="Victor's Rayda Assessment Demo", layout="wide")
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="Victor Anderson | Rayda Assessment", layout="wide")
 
-# --- NAVIGATION ---
-page = st.sidebar.radio("Go to:", ["📈 AI Strategy (Task 2)", "🖥️ Client Trust Portal (Task 1)"])
+# --- CUSTOM CSS FOR TIMELINE ---
+st.markdown("""
+    <style>
+    .reportview-container .main .block-container { padding-top: 2rem; }
+    .stMetric { background-color: #f0f2f6; padding: 10px; border-radius: 10px; }
+    </style>
+    """, unsafe_allow_index=True)
 
-# ==========================================
-# PAGE 1: AI STRATEGY (TASK 2) - THE PREVIOUS APP
-# ==========================================
-if page == "📈 AI Strategy (Task 2)":
-    st.title("🛡️ AI Confidence vs. Guardrail Simulator")
-    st.info("Goal: Demonstrate how we scale automation without breaking client trust.")
-    
-    threshold = st.sidebar.slider("AI Confidence Threshold (%)", 50, 99, 85)
-    
-    col1, col2, col3 = st.columns(3)
-    # (Keeping your existing logic simplified for space)
-    auto_rate = (100 - threshold) * 1.2
-    error_rate = max(1.5, (100 - threshold) * 0.4)
-    
-    col1.metric("Automation Rate", f"{auto_rate:.1f}%")
-    col2.metric("Re-open Rate (Guardrail)", f"{error_rate:.1f}%", delta_color="inverse")
-    col3.success("System Status: Healthy") if error_rate < 5 else col3.warning("System Status: At Risk")
-    st.line_chart({"Automation": [auto_rate], "Risk": [error_rate]})
+# --- SIDEBAR NAVIGATION ---
+st.sidebar.title("Assessment Navigation")
+page = st.sidebar.radio("Select Task Demo:", ["🖥️ Client Trust Portal (Task 1)", "📈 AI Strategy & Metrics (Task 2)"])
+
+st.sidebar.divider()
+st.sidebar.markdown(f"**Current View:** {page}")
 
 # ==========================================
-# PAGE 2: CLIENT TRUST PORTAL (TASK 1)
+# PAGE 1: CLIENT TRUST PORTAL (TASK 1)
 # ==========================================
-else:
-    st.title("🖥️ Enterprise Admin: Request Tracking")
-    st.markdown("### Active Requests for *Acme Corp*")
+if page == "🖥️ Client Trust Portal (Task 1)":
+    st.title("🖥️ Task 1: Enterprise Request Tracking")
+    st.info("Problem: Clients have no visibility. Solution: Real-time status tracking & audit trails.")
 
-    # Mock Data for the Dashboard
+    # 1. Dashboard View
+    st.subheader("Organization Dashboard: Acme Corp")
     data = {
-        "Request ID": ["#RAY-9901", "#RAY-9854", "#RAY-9812"],
-        "Type": ["Laptop Order (20x)", "Software Access", "Wifi Hardware Repair"],
-        "Status": ["In Progress", "Resolved", "Acknowledged"],
-        "SLA Status": ["🟢 On Track", "✅ Fulfilled", "🟡 1h Left"],
-        "Last Updated": ["2 hours ago", "1 day ago", "10 mins ago"]
+        "Request ID": ["#RAY-9901", "#RAY-9854", "#RAY-9812", "#RAY-9799"],
+        "Type": ["Laptop Order (20x)", "Software Access", "Wifi Hardware Repair", "New Hire Provisioning"],
+        "Status": ["In Progress", "Resolved", "Acknowledged", "Closed"],
+        "SLA Status": ["🟡 2h to Breached", "✅ Fulfilled", "🟢 On Track", "✅ Completed"],
+        "Last Updated": ["2 hours ago", "1 day ago", "15 mins ago", "4 days ago"]
     }
     df = pd.DataFrame(data)
-    st.table(df)
-
-    st.write("---")
-    st.subheader("🔍 Deep Dive: Request #RAY-9901")
     
-    # The Timeline - This is the "Audit Trail" from your PRD
-    st.markdown("#### **Status Timeline**")
-    
-    # Use columns to simulate a timeline
-    events = [
-        ("✅", "Submitted", "Oct 24, 09:00 AM", "Client: Victor Anderson"),
-        ("✅", "Acknowledged", "Oct 24, 09:15 AM", "System: Auto-assigned to Hardware Team"),
-        ("🔵", "In Progress", "Oct 24, 11:30 AM", "Ops: 'Sourcing 15/20 laptops from local warehouse.'"),
-        ("⚪", "Resolved", "Pending", "-"),
-        ("⚪", "Closed", "Pending", "-")
-    ]
-    
-    for icon, status, time, note in events:
-        col_icon, col_txt = st.columns([1, 15])
-        with col_icon:
-            st.write(icon)
-        with col_txt:
-            st.markdown(f"**{status}** | {time}")
-            st.caption(note)
+    # Styled table
+    st.dataframe(df, use_container_width=True, hide_index=True)
 
-    # Demoing the "Internal Note" feature vs "Client Note"
-    with st.expander("🛠️ View Internal Rayda Ops View (Hidden from Client)"):
-        st.warning("INTERNAL ONLY: Supply chain delay on remaining 5 units. Expected arrival Oct 28.")
-        st.button("Add Internal Note")
-        st.button("Update Status to Resolved")
+    st.divider()
 
-    st.sidebar.markdown("---")
-    st.sidebar.write("**Victor's Demo Notes:**")
-    st.sidebar.info("This view solves the 'Silence = Inaction' problem by providing a real-time audit trail and differentiating between internal/external notes.")
+    # 2. Audit Trail / Timeline View
+    col_a, col_b = st.columns([2, 1])
+    
+    with col_a:
+        st.subheader("🔍 Detailed Audit Trail: #RAY-9901")
+        st.write("**Request:** 20x MacBook Pro M3 for Engineering Team")
+        
+        # Timeline Logic
+        timeline = [
+            {"icon": "✅", "status": "Submitted", "time": "Oct 24, 09:00 AM", "note": "Client (Victor Anderson): 'Need these for the Nov 1st batch of new hires.'"},
+            {"icon": "✅", "status": "Acknowledged", "time": "Oct 24, 09:15 AM", "note": "System: Assigned to Hardware Fulfillment team. SLA confirmed (5 Days)."},
+            {"icon": "🔵", "status": "In Progress", "time": "Oct 24, 11:30 AM", "note": "Ops (Sarah): '15 units sourced. Awaiting 5 more from regional warehouse.'"},
+            {"icon": "⚪", "status": "Resolved", "time": "Pending", "note": "-"},
+            {"icon": "⚪", "status": "Closed", "time": "Pending", "note": "-"}
+        ]
+
+        for event in timeline:
+            with st.container():
+                c1, c2 = st.columns([1, 15])
+                c1.write(event["icon"])
+                c2.markdown(f"**{event['status']}** | {event['time']}")
+                c2.caption(event["note"])
+                st.write("")
+
+    with col_b:
+        st.subheader("🛠️ Internal Ops Actions")
+        st.caption("This section is only visible to Rayda Employees.")
+        with st.expander("Add Internal Note (Hidden from Client)", expanded=True):
+            st.text_area("Note content...", placeholder="e.g., Shipping carrier delayed due to weather.")
+            st.checkbox("Mark as Urgent")
+            st.button("Post Internal Note")
+        
+        st.button("Update Status: Resolved", use_container_width=True)
+        st.error("Flag SLA Breach")
+
+# ==========================================
+# PAGE 2: AI STRATEGY (TASK 2)
+# ==========================================
+elif page == "📈 AI Strategy & Metrics (Task 2)":
+    st.title("📈 Task 2: AI Measurement Framework")
+    st.markdown("### Feature: AI-Powered IT Request Automation")
+
+    # 1. Simulator Controls
+    st.sidebar.subheader("Adjust AI Parameters")
+    threshold = st.sidebar.slider("AI Confidence Threshold (%)", 50, 99, 85, 
+                                  help="The minimum confidence the AI needs to take action without a human.")
+    
+    # 2. Simulation Brain
+    total_requests = 1000
+    np.random.seed(42)
+    scores = np.random.normal(78, 12, total_requests)
+    
+    # Logic: High threshold = lower volume, but lower error (re-open) rate.
+    automated_count = sum(scores > threshold)
+    automation_rate = (automated_count / total_requests)
+    
+    # Re-open rate (Guardrail) logic
+    # As threshold goes down, error rate goes up exponentially
+    base_error = 1.2
+    risk_multiplier = (100 - threshold) * 0.35
+    reopen_rate = base_error + risk_multiplier
+
+    # 3. Metrics Display
+    m1, m2, m3 = st.columns(3)
+    m1.metric("North Star: Automation Rate", f"{automation_rate:.1%}", help="Target: 30% by Day 90")
+    m2.metric("Guardrail: Re-open Rate", f"{reopen_rate:.1f}%", 
+              delta=f"{int(automated_count * (reopen_rate/100))} tickets", delta_color="inverse")
+    
+    status = "✅ HEALTHY" if reopen_rate < 5 else "🟡 AT RISK" if reopen_rate < 10 else "🚨 CRITICAL"
+    m3.metric("System Health", status)
+
+    # 4. Visualizing the Decision Frontier
+    st.divider()
+    st.subheader("The Trade-off: Scale vs. Trust")
+    
+    # Generate data for the line chart
+    t_range = list(range(50, 100))
+    chart_data = pd.DataFrame({
+        "Threshold": t_range,
+        "Automation %": [(len(scores[scores > t]) / total_requests) * 100 for t in t_range],
+        "Risk (Re-open Rate)": [(base_error + (100 - t) * 0.35) for t in t_range]
+    }).set_index("Threshold")
+    
+    st.line_chart(chart_data)
+    
+    st.write("**Victor's Strategic Insight:**")
+    st.write(f"At a **{threshold}% threshold**, we automate **{automated_count}** requests. To reach our 30% North Star target, we need to balance the AI's aggressiveness with our re-open guardrail. If we go below 75% confidence, we breach our 10% re-open safety limit.")

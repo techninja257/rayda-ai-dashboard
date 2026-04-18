@@ -5,10 +5,31 @@ import numpy as np
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Victor Anderson | Rayda Assessment", layout="wide")
 
-# --- CUSTOM CSS (FIXED PARAMETER) ---
+# --- CUSTOM CSS (IMPROVED CONTRAST FOR CARDS) ---
 st.markdown("""
     <style>
-    .stMetric { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border: 1px solid #d1d5db; }
+    /* Metric Card Styling */
+    [data-testid="stMetric"] {
+        background-color: #000000 !important;
+        padding: 20px !important;
+        border-radius: 12px !important;
+        border: 1px solid #333333 !important;
+        color: white !important;
+    }
+    
+    /* Force Label & Value to White */
+    [data-testid="stMetricLabel"] > div {
+        color: #FFFFFF !important;
+        font-weight: bold !important;
+    }
+    [data-testid="stMetricValue"] > div {
+        color: #FFFFFF !important;
+    }
+    
+    /* Optional: Improve general UI padding */
+    .main .block-container {
+        padding-top: 2rem;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -17,7 +38,7 @@ st.sidebar.title("Victor Anderson: PM Assessment")
 page = st.sidebar.radio("Select Task Demo:", ["🖥️ Client Trust Portal (Task 1)", "📈 AI Strategy & Metrics (Task 2)"])
 
 st.sidebar.divider()
-st.sidebar.info("This prototype supports the PRD and Measurement Framework in the case study.")
+st.sidebar.info("Pro Tip: During the call, use the sidebar to toggle between 'Client Experience' and 'Internal Strategy'.")
 
 # ==========================================
 # PAGE 1: CLIENT TRUST PORTAL (TASK 1)
@@ -93,12 +114,12 @@ elif page == "📈 AI Strategy & Metrics (Task 2)":
     automated_count = sum(scores > threshold)
     auto_rate = (automated_count / total_reqs)
     
-    # Guardrail logic: As threshold goes down, errors go up.
+    # Guardrail logic
     reopen_rate = max(1.5, (100 - threshold) * 0.38)
 
-    # 3. Metrics
+    # 3. Metrics (With New CSS Styling Applied)
     m1, m2, m3 = st.columns(3)
-    m1.metric("North Star: Automation Rate", f"{auto_rate:.1%}", help="Target: 30%")
+    m1.metric("North Star: Automation Rate", f"{auto_rate:.1%}")
     m2.metric("Guardrail: Re-open Rate", f"{reopen_rate:.1f}%", delta=f"{int(automated_count*(reopen_rate/100))} tickets", delta_color="inverse")
     
     if reopen_rate > 10:
@@ -123,7 +144,7 @@ elif page == "📈 AI Strategy & Metrics (Task 2)":
     
     st.markdown(f"""
     **Victor's Defense Strategy:**
-    - To hit our **30% Automation North Star**, we must maintain a threshold of approximately **83%**.
-    - If we drop the threshold further, the **Re-open Guardrail** (Task 2, Guardrail 1) will breach our 10% safety limit.
-    - This dashboard is how I will provide weekly alignment to the engineering and ops teams during the 90-day rollout.
+    - This simulation helps us find the 'Sweet Spot' for our launch. 
+    - At a **{threshold}% threshold**, our re-open rate is **{reopen_rate:.1f}%**.
+    - If this moves into the **'Caution' or 'Critical'** zones, our system alerts the Ops Lead to manually override the AI until the model is retrained.
     """)

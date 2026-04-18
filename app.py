@@ -5,41 +5,38 @@ import numpy as np
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Victor Anderson | Rayda Assessment", layout="wide")
 
-# --- CUSTOM CSS FOR TIMELINE ---
+# --- CUSTOM CSS (FIXED PARAMETER) ---
 st.markdown("""
     <style>
-    .reportview-container .main .block-container { padding-top: 2rem; }
-    .stMetric { background-color: #f0f2f6; padding: 10px; border-radius: 10px; }
+    .stMetric { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border: 1px solid #d1d5db; }
     </style>
-    """, unsafe_allow_index=True)
+    """, unsafe_allow_html=True)
 
 # --- SIDEBAR NAVIGATION ---
-st.sidebar.title("Assessment Navigation")
+st.sidebar.title("Victor Anderson: PM Assessment")
 page = st.sidebar.radio("Select Task Demo:", ["🖥️ Client Trust Portal (Task 1)", "📈 AI Strategy & Metrics (Task 2)"])
 
 st.sidebar.divider()
-st.sidebar.markdown(f"**Current View:** {page}")
+st.sidebar.info("This prototype supports the PRD and Measurement Framework in the case study.")
 
 # ==========================================
 # PAGE 1: CLIENT TRUST PORTAL (TASK 1)
 # ==========================================
 if page == "🖥️ Client Trust Portal (Task 1)":
     st.title("🖥️ Task 1: Enterprise Request Tracking")
-    st.info("Problem: Clients have no visibility. Solution: Real-time status tracking & audit trails.")
+    st.markdown("### Problem Statement: *'Silence reads as inaction.'*")
+    st.info("The Goal: Reduce CS Slack/Email volume by 40% through self-serve visibility.")
 
     # 1. Dashboard View
     st.subheader("Organization Dashboard: Acme Corp")
-    data = {
+    dashboard_data = {
         "Request ID": ["#RAY-9901", "#RAY-9854", "#RAY-9812", "#RAY-9799"],
-        "Type": ["Laptop Order (20x)", "Software Access", "Wifi Hardware Repair", "New Hire Provisioning"],
+        "Type": ["Laptop Order (20x)", "Software Access", "Wifi Repair", "New Hire Sync"],
         "Status": ["In Progress", "Resolved", "Acknowledged", "Closed"],
-        "SLA Status": ["🟡 2h to Breached", "✅ Fulfilled", "🟢 On Track", "✅ Completed"],
+        "SLA Status": ["🟡 2h to Breach", "✅ Fulfilled", "🟢 On Track", "✅ Completed"],
         "Last Updated": ["2 hours ago", "1 day ago", "15 mins ago", "4 days ago"]
     }
-    df = pd.DataFrame(data)
-    
-    # Styled table
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(dashboard_data), use_container_width=True, hide_index=True)
 
     st.divider()
 
@@ -48,15 +45,14 @@ if page == "🖥️ Client Trust Portal (Task 1)":
     
     with col_a:
         st.subheader("🔍 Detailed Audit Trail: #RAY-9901")
-        st.write("**Request:** 20x MacBook Pro M3 for Engineering Team")
+        st.write("**Request Description:** 20x MacBook Pro M3 for Engineering Team")
         
         # Timeline Logic
         timeline = [
             {"icon": "✅", "status": "Submitted", "time": "Oct 24, 09:00 AM", "note": "Client (Victor Anderson): 'Need these for the Nov 1st batch of new hires.'"},
-            {"icon": "✅", "status": "Acknowledged", "time": "Oct 24, 09:15 AM", "note": "System: Assigned to Hardware Fulfillment team. SLA confirmed (5 Days)."},
+            {"icon": "✅", "status": "Acknowledged", "time": "Oct 24, 09:15 AM", "note": "System: Assigned to Hardware Fulfillment team. SLA: 5 Business Days."},
             {"icon": "🔵", "status": "In Progress", "time": "Oct 24, 11:30 AM", "note": "Ops (Sarah): '15 units sourced. Awaiting 5 more from regional warehouse.'"},
             {"icon": "⚪", "status": "Resolved", "time": "Pending", "note": "-"},
-            {"icon": "⚪", "status": "Closed", "time": "Pending", "note": "-"}
         ]
 
         for event in timeline:
@@ -68,65 +64,66 @@ if page == "🖥️ Client Trust Portal (Task 1)":
                 st.write("")
 
     with col_b:
-        st.subheader("🛠️ Internal Ops Actions")
-        st.caption("This section is only visible to Rayda Employees.")
-        with st.expander("Add Internal Note (Hidden from Client)", expanded=True):
-            st.text_area("Note content...", placeholder="e.g., Shipping carrier delayed due to weather.")
-            st.checkbox("Mark as Urgent")
+        st.subheader("🛠️ Internal Rayda Ops View")
+        st.caption("Internal-only context for CS and Ops teams.")
+        with st.expander("Internal Notes (Hidden from Client)", expanded=True):
+            st.warning("Supply chain issue: Regional warehouse delayed by 48hrs due to weather.")
             st.button("Post Internal Note")
         
-        st.button("Update Status: Resolved", use_container_width=True)
-        st.error("Flag SLA Breach")
+        st.button("Update Status to Resolved", type="primary", use_container_width=True)
+        st.button("Flag for CS Manager Review", use_container_width=True)
 
 # ==========================================
 # PAGE 2: AI STRATEGY (TASK 2)
 # ==========================================
 elif page == "📈 AI Strategy & Metrics (Task 2)":
     st.title("📈 Task 2: AI Measurement Framework")
-    st.markdown("### Feature: AI-Powered IT Request Automation")
+    st.markdown("### Feature: AI-Powered IT Workflow Automation")
 
     # 1. Simulator Controls
-    st.sidebar.subheader("Adjust AI Parameters")
+    st.sidebar.subheader("Adjust AI Sensitivity")
     threshold = st.sidebar.slider("AI Confidence Threshold (%)", 50, 99, 85, 
-                                  help="The minimum confidence the AI needs to take action without a human.")
+                                  help="High threshold = AI is cautious. Low threshold = AI is aggressive.")
     
-    # 2. Simulation Brain
-    total_requests = 1000
+    # 2. Logic Simulation
+    total_reqs = 1000
     np.random.seed(42)
-    scores = np.random.normal(78, 12, total_requests)
+    scores = np.random.normal(78, 12, total_reqs)
     
-    # Logic: High threshold = lower volume, but lower error (re-open) rate.
     automated_count = sum(scores > threshold)
-    automation_rate = (automated_count / total_requests)
+    auto_rate = (automated_count / total_reqs)
     
-    # Re-open rate (Guardrail) logic
-    # As threshold goes down, error rate goes up exponentially
-    base_error = 1.2
-    risk_multiplier = (100 - threshold) * 0.35
-    reopen_rate = base_error + risk_multiplier
+    # Guardrail logic: As threshold goes down, errors go up.
+    reopen_rate = max(1.5, (100 - threshold) * 0.38)
 
-    # 3. Metrics Display
+    # 3. Metrics
     m1, m2, m3 = st.columns(3)
-    m1.metric("North Star: Automation Rate", f"{automation_rate:.1%}", help="Target: 30% by Day 90")
-    m2.metric("Guardrail: Re-open Rate", f"{reopen_rate:.1f}%", 
-              delta=f"{int(automated_count * (reopen_rate/100))} tickets", delta_color="inverse")
+    m1.metric("North Star: Automation Rate", f"{auto_rate:.1%}", help="Target: 30%")
+    m2.metric("Guardrail: Re-open Rate", f"{reopen_rate:.1f}%", delta=f"{int(automated_count*(reopen_rate/100))} tickets", delta_color="inverse")
     
-    status = "✅ HEALTHY" if reopen_rate < 5 else "🟡 AT RISK" if reopen_rate < 10 else "🚨 CRITICAL"
-    m3.metric("System Health", status)
+    if reopen_rate > 10:
+        m3.error("Status: CRITICAL RISK")
+    elif reopen_rate > 5:
+        m3.warning("Status: CAUTION")
+    else:
+        m3.success("Status: HEALTHY")
 
-    # 4. Visualizing the Decision Frontier
+    # 4. Chart
     st.divider()
-    st.subheader("The Trade-off: Scale vs. Trust")
+    st.subheader("Scale vs. Trust Frontier")
     
-    # Generate data for the line chart
     t_range = list(range(50, 100))
     chart_data = pd.DataFrame({
         "Threshold": t_range,
-        "Automation %": [(len(scores[scores > t]) / total_requests) * 100 for t in t_range],
-        "Risk (Re-open Rate)": [(base_error + (100 - t) * 0.35) for t in t_range]
+        "Automation %": [(len(scores[scores > t]) / total_reqs) * 100 for t in t_range],
+        "Re-open Risk %": [(max(1.5, (100 - t) * 0.38)) for t in t_range]
     }).set_index("Threshold")
     
     st.line_chart(chart_data)
     
-    st.write("**Victor's Strategic Insight:**")
-    st.write(f"At a **{threshold}% threshold**, we automate **{automated_count}** requests. To reach our 30% North Star target, we need to balance the AI's aggressiveness with our re-open guardrail. If we go below 75% confidence, we breach our 10% re-open safety limit.")
+    st.markdown(f"""
+    **Victor's Defense Strategy:**
+    - To hit our **30% Automation North Star**, we must maintain a threshold of approximately **83%**.
+    - If we drop the threshold further, the **Re-open Guardrail** (Task 2, Guardrail 1) will breach our 10% safety limit.
+    - This dashboard is how I will provide weekly alignment to the engineering and ops teams during the 90-day rollout.
+    """)
